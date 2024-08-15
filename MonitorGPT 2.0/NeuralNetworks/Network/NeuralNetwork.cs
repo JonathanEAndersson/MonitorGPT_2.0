@@ -117,7 +117,7 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
             Console.WriteLine("Enter the 14 desired values separated by spaces (e.g., 1 2 3):");
             string input = Console.ReadLine();
             string[] inputValues = input.Split(' ');
-            float[] targetValues = new float[_layers[0].nodes.Length];
+            float[] targetValues = new float[_layers[_layers.Length - 1].nodes.Length];
             for (int i = 0; i < targetValues.Length; i++)
             {
                 targetValues[i] = float.Parse(inputValues[i].Trim());
