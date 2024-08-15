@@ -112,7 +112,7 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
         }
         public async Task<float[]> Start()
         {
-            float[] results = new float[_layers[0].nodes.Length];
+            float[] results = new float[_layers[_layers.Length-1].nodes.Length];
             float[] values = Ask();
             Console.WriteLine("Enter the 14 desired values separated by spaces (e.g., 1 2 3):");
             string input = Console.ReadLine();
