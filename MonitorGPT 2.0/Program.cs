@@ -6,7 +6,7 @@ namespace MonitorGPT_2._0
     {
         static async Task Main(string[] args)
         {
-            float[] layersConfig = { 3, 100, 100, 3 };
+            float[] layersConfig = { 14, 28, 28, 28, 14 };
             NeuralNetwork network = new NeuralNetwork(layersConfig);
             await network.Start();
             Console.WriteLine("Done");

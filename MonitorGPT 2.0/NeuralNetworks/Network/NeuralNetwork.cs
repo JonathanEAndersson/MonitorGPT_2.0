@@ -12,9 +12,9 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
     internal class NeuralNetwork
     {
         public Layer[] _layers { get; set; }
-        private float momentum = 0.9F;
-        private float learningRate = 0.0001F;
-        private float errorThreshold = 0.01F;
+        private float momentum = 0.99F;
+        private float learningRate = 0.001F;
+        private float errorThreshold = 0.00000001F;
         public NeuralNetwork(float[] layerMap)
         {
             _layers = NeuralNetworkBuilder(layerMap).GetAwaiter().GetResult();
@@ -61,7 +61,6 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
             }
             return layers;
         }
-
         private static async Task<Layer[]> AssignNeuralNetwork(Layer[] layers)
         {
             int layerAmount = layers.Length;
@@ -101,11 +100,11 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
         }
         private float[] Ask()
         {
-            Console.WriteLine("Enter 3 values separated by spaces (e.g., 1 2 3):");
+            Console.WriteLine("Enter 14 values separated by spaces (e.g., 1 2 3):");
             string input = Console.ReadLine();
             string[] inputValues = input.Split(' ');
-            float[] floatValues = new float[3];
-            for (int i = 0; i < 3; i++)
+            float[] floatValues = new float[_layers[0].nodes.Length];
+            for (int i = 0; i < floatValues.Length; i++)
             {
                 floatValues[i] = float.Parse(inputValues[i].Trim());
             }
@@ -113,12 +112,16 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
         }
         public async Task<float[]> Start()
         {
-            float[] result = new float[3];
+            float[] results = new float[_layers[0].nodes.Length];
             float[] values = Ask();
-            Console.WriteLine("Enter the 3 desired values separated by spaces (e.g., 1 2 3):");
+            Console.WriteLine("Enter the 14 desired values separated by spaces (e.g., 1 2 3):");
             string input = Console.ReadLine();
             string[] inputValues = input.Split(' ');
-            float[] targetValues = new float[3];
+            float[] targetValues = new float[_layers[0].nodes.Length];
+            for (int i = 0; i < targetValues.Length; i++)
+            {
+                targetValues[i] = float.Parse(inputValues[i].Trim());
+            }
             for (int i = 0; i < values.Length; i++)
             {
                 _layers[0].nodes[i].activation = values[i];
@@ -130,19 +133,16 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
                 await Forwardpropagate();
                 for (int i = 0; i < _layers[_layers.Length - 1].nodes.Length; i++)
                 {
-                    result[i] = _layers[_layers.Length - 1].nodes[i].activation;
+                    results[i] = _layers[_layers.Length - 1].nodes[i].activation;
                 }
-                foreach (var item in result)
+                foreach (var result in results)
                 {
-                    Console.Write("\t" + item.ToString() + " ");
+                    Console.Write(MathF.Round(result, 6).ToString() + "    ");
                 }
+                Console.Write("\t Error: " + CalculateError(results, targetValues));
                 Console.Write("\n");
-                for (int i = 0; i < 3; i++)
-                {
-                    targetValues[i] = float.Parse(inputValues[i].Trim());
-                }
                 await Backpropagate(targetValues);
-                float error = CalculateError(result, targetValues);
+                float error = CalculateError(results, targetValues);
                 if (error < errorThreshold)
                 {
                     Console.WriteLine($"Training complete. Final error: {error}, Iterations: {k}");
@@ -152,7 +152,7 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
             stopwatch.Stop();
             Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
 
-            return result;
+            return results;
         }
         private async Task Forwardpropagate()
         {
@@ -165,7 +165,7 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
                     {
                         z[k] = _layers[i].nodes[j].synapse.inputNodes[k].activation * _layers[i].nodes[j].weights[k].value;
                     }
-                    _layers[i].nodes[j].activation = Activation.ActivationPReLUFunction(z.Sum() + _layers[i].nodes[j].bias.value);
+                    _layers[i].nodes[j].activation = Activation.ActivationLeakyReLUFunction(z.Sum() + _layers[i].nodes[j].bias.value);
                 }
             }
         }
@@ -175,7 +175,7 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
             for (int i = 0; i < outputLayer.nodes.Length; i++) // Output Layer
             {
                 var outputNode = outputLayer.nodes[i];
-                outputNode.gradient = (outputNode.activation - targetValues[i]) * Activation.ActivationPReLUFunctionDerivative(outputNode.activation);
+                outputNode.gradient = (outputNode.activation - targetValues[i]) * Activation.ActivationLeakyReLUFunctionDerivative(outputNode.activation);
             }
             for (int i = _layers.Length - 2; i >= 1; i--) // Hidden Layers
             {
@@ -190,7 +190,7 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
                         var outputNode = nextLayer.nodes[k];
                         deltaSum += outputNode.gradient * outputNode.weights[j].value;
                     }
-                    hiddenNode.gradient = deltaSum * Activation.ActivationPReLUFunctionDerivative(hiddenNode.activation);
+                    hiddenNode.gradient = deltaSum * Activation.ActivationLeakyReLUFunctionDerivative(hiddenNode.activation);
                 }
             }
             for (int i = 1; i < _layers.Length; i++) // Update Weights, Biases, and Momentum
