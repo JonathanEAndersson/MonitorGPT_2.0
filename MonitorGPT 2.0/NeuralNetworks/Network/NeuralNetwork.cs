@@ -30,7 +30,6 @@ namespace MonitorGPT_2._0.NeuralNetworks.Network
         {
             int layerAmount = layerMap.Length;
             Layer[] layers = new Layer[layerAmount];
-            Random random = new Random();
             for (int i = 0; i < layerAmount; i++)
             {
                 int nodeAmount = (int)layerMap[i];
